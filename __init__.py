@@ -1,32 +1,40 @@
+import os
+import json
+
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
+from tornado.options import define, options
 from tornado.web import Application, RequestHandler
-from views import RolesHandler
 
 from motor import motor_tornado
 
+from views import BaseView, RolesHandler
 
-class MainHandler(RequestHandler):
+PORT = int(os.environ.get("PORT", 5000))
+
+class MainHandler(BaseView):
     def get(self):
-        self.write(
-            "Olá galera da Python Brasil 2019!\n"
-            "Para ver os rolês faça requisições para '/roles'\n"
-        )
+        self.write("Olá galera da Python Brasil 2019! "
+                   "Para ver os rolês faça requisições para '/roles'")
 
 
 def main():
-    port = 8000
+    MONGO_URL = os.environ.get('MONGO_URL')
 
-    client = motor_tornado.MotorClient("localhost", 27017)
-    db = client.roles_db
+    client = motor_tornado.MotorClient(MONGO_URL, retryWrites=False)
+    db = client.test
 
-    app = Application([("/", MainHandler), ('/roles', RolesHandler), ], db=db)
+    app = Application([
+        ('/', MainHandler),
+        ('/roles', RolesHandler),
+       ],
+       db=db
+    )
 
     http_server = HTTPServer(app)
-    http_server.listen(port)
-    print("Listening on http://localhost:%i" % port)
+    http_server.listen(PORT)
     IOLoop.current().start()
 
 
-if __name__ == "__main__":
+if __name__== '__main__':
     main()

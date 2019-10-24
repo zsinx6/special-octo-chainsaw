@@ -16,26 +16,25 @@ class BaseView(RequestHandler):
         self.write(json.dumps(data))
 
 
+
 class RolesHandler(BaseView):
     def __init__(self, application, request):
-        super(RolesHandler, self).__init__(application, request)
-        _db = self.settings["db"]
-        self.collection = "role_collection"
+        super( RolesHandler, self ).__init__(application, request)
+        _db = self.settings['db']
+        self.collection = 'pybr-roles'
         self.db = _db[self.collection]
-        self.required_params = ("nome",)
+        self.required_params = ('nome', )
         self.acceptable_params = (
-            "hora",
-            "preco_da_cerveja",
-            "tem_karaoke",
-            "quem_vai",
-            "endereco",
-            "data",
+            'hora', 'preco_da_cerveja', 'tem_karaoke', 'quem_vai', 'endereco',
+            'data'
         )
         self.all_params = self.required_params + self.acceptable_params
 
     async def get(self):
         data = await self._do_find_all()
-        self.write({"data": [self._format_result_to_dict(d) for d in data]})
+        self.write({
+            'data': [self._format_result_to_dict(d) for d in data]
+        })
 
     async def post(self):
         body = json.loads(self.request.body)
@@ -76,6 +75,11 @@ class RolesHandler(BaseView):
             'data': self._format_result_to_dict(result[0])
         }, status=201)
 
+    async def _do_find_all(self):
+        cursor = self.db.find()
+        all_data = [doc for doc in await cursor.to_list(length=1000)]
+        return all_data
+
     async def _do_find(self, nome):
         cursor = self.db.find({'nome': nome})
         data = await cursor.to_list(length=1)
@@ -87,6 +91,10 @@ class RolesHandler(BaseView):
     async def _do_insert_one(self, data):
         await self.db.insert_one(data)
 
+    def _format_result_to_dict(self, mongo_result):
+        result_dict = {key: mongo_result.get(key) for key in self.all_params}
+        return result_dict
+
     def _validate_params(self, body):
         errors = []
         for param in self.required_params:
@@ -97,12 +105,3 @@ class RolesHandler(BaseView):
                 errors.append({param: 'Unexpected parameter'})
 
         return errors
-
-    async def _do_find_all(self):
-        cursor = self.db.find()
-        all_data = [doc for doc in await cursor.to_list(length=1000)]
-        return all_data
-
-    def _format_result_to_dict(self, mongo_result):
-        result_dict = {key: mongo_result.get(key) for key in self.all_params}
-        return result_dict
