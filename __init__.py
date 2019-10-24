@@ -10,7 +10,7 @@ from motor import motor_tornado
 
 from views import BaseView, RolesHandler
 
-PORT = int(os.environ.get("PORT", 5000))
+PORT = int(os.environ.get("PORT", 80))
 
 class MainHandler(BaseView):
     def get(self):
