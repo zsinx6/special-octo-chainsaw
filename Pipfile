@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 motor = "*"
 tornado = "*"
+dnspython = "*"
 
 [requires]
 python_version = "3.7"
